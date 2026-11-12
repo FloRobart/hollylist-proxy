@@ -1,0 +1,41 @@
+# Everything Traefik exposes: a service that is not listed here cannot be reached from outside.
+#
+# Traefik reaches each service by its name, on the network of that service. The
+# docker-compose.override.yml of flollylist-wrapper connects Traefik to these networks.
+#
+# HTTPS, the certificate, the security headers and the rate limit come from the "websecure"
+# entrypoint. A "tls" key must not be added to a router: Traefik would serve its default
+# certificate instead of the Let's Encrypt one.
+
+http:
+  routers:
+    flollylist-api:
+      rule: "Host(`api.flollylist.florobart.fr`)"
+      entryPoints:
+        - websecure
+      service: flollylist-api
+
+    flollylist-app:
+      rule: "Host(`flollylist.florobart.fr`)"
+      entryPoints:
+        - websecure
+      service: flollylist-app
+
+  services:
+    flollylist-api:
+      loadBalancer:
+        servers:
+          - url: "http://flollylist-api:80"
+        healthCheck:
+          path: /
+          interval: 10s
+          timeout: 5s
+
+    flollylist-app:
+      loadBalancer:
+        servers:
+          - url: "http://flollylist-app:8080"
+        healthCheck:
+          path: /
+          interval: 10s
+          timeout: 5s
