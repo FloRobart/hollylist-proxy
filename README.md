@@ -1,14 +1,14 @@
-# FlollyList — Proxy
+# HollyList — Proxy
 
-Le reverse proxy Traefik du serveur de FlollyList : le seul point d'entrée sur les ports 80 et 443. `flollylist-wrapper` le déploie avec le reste de l'écosystème.
+Le reverse proxy Traefik du serveur de HollyList : le seul point d'entrée sur les ports 80 et 443. `hollylist-wrapper` le déploie avec le reste de l'écosystème.
 
 Ce dépôt déclare tout ce qui est exposé : les routes, et ce qui leur est commun (HTTPS, certificats Let's Encrypt, options TLS, en-têtes de sécurité et limite de requêtes). Traefik n'a aucun accès à l'API Docker, et les autres dépôts n'ont aucun label Traefik.
 
-C'est le même proxy qu'`econoris-proxy`, avec les routes de FlollyList : les deux écosystèmes tournent sur des serveurs différents. Sur un même serveur, un seul Traefik peut écouter les ports 80 et 443 : il faudrait alors réunir les routes dans un seul proxy.
+C'est le même proxy qu'`econoris-proxy`, avec les routes de HollyList : les deux écosystèmes tournent sur des serveurs différents. Sur un même serveur, un seul Traefik peut écouter les ports 80 et 443 : il faudrait alors réunir les routes dans un seul proxy.
 
 # Table des matières
 
-- [FlollyList — Proxy](#flollylist--proxy)
+- [HollyList — Proxy](#hollylist--proxy)
 - [Table des matières](#table-des-matières)
 - [Structure](#structure)
 - [Ce qui est exposé](#ce-qui-est-exposé)
@@ -21,7 +21,7 @@ C'est le même proxy qu'`econoris-proxy`, avec les routes de FlollyList : les de
 # Structure
 
 ```
-flollylist-proxy/
+hollylist-proxy/
 ├── docker-compose.yml          ← Traefik
 ├── .env.example                ← réglages de cette machine
 └── dynamic/
@@ -35,16 +35,14 @@ flollylist-proxy/
 
 | Domaine | Service |
 |---|---|
-| `flollylist.florobart.fr` | `flollylist-app`, port 8080 |
-| `api.flollylist.florobart.fr` | `flollylist-api`, port 80 |
+| `hollylist.florobart.fr` | `hollylist-app`, port 8080 |
+| `api.hollylist.florobart.fr` | `hollylist-api`, port 80 |
 
 Les deux domaines doivent pointer vers le serveur (enregistrements `A`, et `AAAA` si le serveur a une adresse IPv6) avant le premier démarrage : Let's Encrypt vérifie chaque domaine en HTTP avant de délivrer son certificat.
 
-`api.flollylist.florobart.fr` remplace l'ancienne adresse de l'API, `flollylist-server.florobart.fr`, qui n'est plus servie : seule l'application web l'appelait, et elle est publiée en même temps que l'API.
-
 # Mettre en service
 
-Il n'y a rien à lancer depuis ce dépôt : tout passe par `flollylist-wrapper`, dont le README décrit la mise en service.
+Il n'y a rien à lancer depuis ce dépôt : tout passe par `hollylist-wrapper`, dont le README décrit la mise en service.
 
 Le réglage de cette machine se trouve dans `env/proxy/.env` du wrapper. `LETSENCRYPT_EMAIL` doit y être rempli.
 
@@ -56,13 +54,13 @@ Compose crée le réseau `traefik-net` avec IPv6. Sans IPv6 sur ce réseau, Dock
 
     ```yaml
     services:
-      flollylist-mon-service:
+      hollylist-mon-service:
         networks:
-          - flollylist-mon-service-net
+          - hollylist-mon-service-net
 
     networks:
-      flollylist-mon-service-net:
-        name: flollylist-mon-service-net
+      hollylist-mon-service-net:
+        name: hollylist-mon-service-net
         internal: true
     ```
 
@@ -72,7 +70,7 @@ Compose crée le réseau `traefik-net` avec IPv6. Sans IPv6 sur ce réseau, Dock
     services:
       traefik:
         networks:
-          - flollylist-mon-service-net
+          - hollylist-mon-service-net
     ```
 
 3. Dans `dynamic/routes.yml` de ce dépôt, déclarer son routeur et son service. Traefik joint le service par son nom :
@@ -80,17 +78,17 @@ Compose crée le réseau `traefik-net` avec IPv6. Sans IPv6 sur ce réseau, Dock
     ```yaml
     http:
       routers:
-        flollylist-mon-service:
-          rule: "Host(`mon-service.flollylist.florobart.fr`)"
+        hollylist-mon-service:
+          rule: "Host(`mon-service.hollylist.florobart.fr`)"
           entryPoints:
             - websecure
-          service: flollylist-mon-service
+          service: hollylist-mon-service
 
       services:
-        flollylist-mon-service:
+        hollylist-mon-service:
           loadBalancer:
             servers:
-              - url: "http://flollylist-mon-service:8080"
+              - url: "http://hollylist-mon-service:8080"
             healthCheck:
               path: /
               interval: 10s

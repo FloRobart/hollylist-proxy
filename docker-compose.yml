@@ -4,7 +4,7 @@
 # It has no access to the Docker API on purpose: if compromised, Traefik could not read what
 # the other containers hold, and a container cannot declare a route for itself.
 #
-# flollylist-wrapper deploys this file, and connects Traefik to the network of each exposed service.
+# hollylist-wrapper deploys this file, and connects Traefik to the network of each exposed service.
 
 x-hardened-service: &hardened-service
   read_only: true
